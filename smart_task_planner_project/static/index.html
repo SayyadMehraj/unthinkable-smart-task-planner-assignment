@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Task Planner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .goal-form {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4facfe;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .plan-summary {
+            background: #e8f5e8;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #28a745;
+        }
+
+        .reasoning {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .tasks-grid {
+            display: grid;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .task-card {
+            background: white;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .task-card:hover {
+            border-color: #4facfe;
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.1);
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .task-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+            flex: 1;
+        }
+
+        .priority-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .priority-low { background: #d4edda; color: #155724; }
+        .priority-medium { background: #fff3cd; color: #856404; }
+        .priority-high { background: #f8d7da; color: #721c24; }
+        .priority-urgent { background: #f5c6cb; color: #721c24; }
+
+        .task-description {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .task-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+            color: #888;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #dc3545;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #28a745;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Smart Task Planner</h1>
+            <p>Break your goals into actionable tasks with AI-powered reasoning</p>
+        </div>
+
+        <div class="main-content">
+            <div class="goal-form">
+                <h2>What's your goal?</h2>
+                <form id="goalForm">
+                    <div class="form-group">
+                        <label for="goal">Goal Description *</label>
+                        <textarea 
+                            id="goal" 
+                            name="goal" 
+                            placeholder="e.g., Launch a product in 2 weeks, Learn a new programming language, Organize a team event..."
+                            required
+                        ></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="timeline">Timeline (weeks)</label>
+                        <input 
+                            type="number" 
+                            id="timeline" 
+                            name="timeline" 
+                            placeholder="Optional: How many weeks do you have?"
+                            min="1"
+                            max="52"
+                        >
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="context">Additional Context</label>
+                        <textarea 
+                            id="context" 
+                            name="context" 
+                            placeholder="Any additional information, constraints, or requirements..."
+                        ></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn" id="submitBtn">
+                        Generate Task Plan
+                    </button>
+                </form>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>AI is analyzing your goal and generating a comprehensive task plan...</p>
+            </div>
+
+            <div class="results" id="results">
+                <div class="plan-summary" id="planSummary"></div>
+                <div class="reasoning" id="reasoning"></div>
+                <div class="tasks-grid" id="tasksGrid"></div>
+            </div>
+
+            <div id="message"></div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('goalForm');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const submitBtn = document.getElementById('submitBtn');
+        const message = document.getElementById('message');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            const goal = formData.get('goal').trim();
+            const timeline = formData.get('timeline');
+            const context = formData.get('context').trim();
+
+            if (!goal) {
+                showMessage('Please enter a goal description.', 'error');
+                return;
+            }
+
+            // Show loading state
+            loading.style.display = 'block';
+            results.style.display = 'none';
+            submitBtn.disabled = true;
+            message.innerHTML = '';
+
+            try {
+                const response = await fetch('/api/plans/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        goal: goal,
+                        timeline_weeks: timeline ? parseInt(timeline) : null,
+                        additional_context: context || null
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                displayResults(data);
+
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage(`Error generating task plan: ${error.message}`, 'error');
+            } finally {
+                loading.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        });
+
+        function displayResults(data) {
+            const planSummary = document.getElementById('planSummary');
+            const reasoning = document.getElementById('reasoning');
+            const tasksGrid = document.getElementById('tasksGrid');
+
+            // Plan summary
+            planSummary.innerHTML = `
+                <h3>📋 Task Plan Summary</h3>
+                <p><strong>Goal ID:</strong> ${data.goal_id}</p>
+                <p><strong>Plan ID:</strong> ${data.plan_id}</p>
+                <p><strong>Total Tasks:</strong> ${data.tasks.length}</p>
+                <p><strong>Estimated Duration:</strong> ${data.estimated_duration_days} days</p>
+            `;
+
+            // AI Reasoning
+            reasoning.innerHTML = `
+                <h4>🤖 AI Reasoning</h4>
+                <p>${data.reasoning}</p>
+            `;
+
+            // Tasks
+            tasksGrid.innerHTML = '';
+            data.tasks.forEach((task, index) => {
+                const taskCard = document.createElement('div');
+                taskCard.className = 'task-card';
+                
+                const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date';
+                const duration = task.estimated_duration_hours ? `${task.estimated_duration_hours}h` : 'TBD';
+                
+                taskCard.innerHTML = `
+                    <div class="task-header">
+                        <div class="task-title">${index + 1}. ${task.title}</div>
+                        <span class="priority-badge priority-${task.priority}">${task.priority}</span>
+                    </div>
+                    <div class="task-description">${task.description || 'No description provided'}</div>
+                    <div class="task-meta">
+                        <span>⏱️ ${duration}</span>
+                        <span>📅 ${dueDate}</span>
+                        <span>📊 ${task.status}</span>
+                    </div>
+                `;
+                
+                tasksGrid.appendChild(taskCard);
+            });
+
+            results.style.display = 'block';
+            showMessage('Task plan generated successfully!', 'success');
+        }
+
+        function showMessage(text, type) {
+            message.innerHTML = `<div class="${type}">${text}</div>`;
+            setTimeout(() => {
+                message.innerHTML = '';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

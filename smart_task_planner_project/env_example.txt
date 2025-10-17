@@ -1,0 +1,9 @@
+# OpenAI API Key (Optional - for enhanced AI features)
+# OPENAI_API_KEY=your_api_key_here
+
+# Database
+DATABASE_URL=sqlite:///./smart_task_planner.db
+
+# App Settings
+APP_NAME=Smart Task Planner
+DEBUG=True
